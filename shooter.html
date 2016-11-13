@@ -154,7 +154,25 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.fire = function() {
-        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 6000))-2;
+        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2;
+        for (var i = 0; i < n; i++) {
+            var th = ((i+0.5) * Math.PI / n);
+            var vx = Math.round(150 * Math.cos(th));
+            var vy = Math.round(150 * Math.sin(th));
+            var bullet = {
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                life: 1
+            };
+            bullets.push(bullet);
+        }
+        playSE(enemyShotAudio);
+    };
+
+    this.CounterFire = function() {
+        var n = (lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2)/2;
         for (var i = 0; i < n; i++) {
             var th = ((i+0.5) * Math.PI / n);
             var vx = Math.round(150 * Math.cos(th));
@@ -274,7 +292,7 @@ function Enemy(canvas,size,PosX) {
         dying = true;
         playSE(explosionAudio);
         enemies.forEach(function(enemy){
-          if(enemy.isAlive() && enemy.hit(x,y,35)) {
+          if(enemy.isAlive() && enemy.hit(x,y,65)) {
             enemy.damage(Math.round((er-5)*0.7));
           }
         });
@@ -286,7 +304,7 @@ function Enemy(canvas,size,PosX) {
         if (life <= 0) {
             this.die();
         } else {
-            this.fire();
+            this.CounterFire();
         }
     };
 
@@ -520,7 +538,7 @@ window.onload = function() {
             enemy.update();
             if (enemy.isAlive()) {
                 enemy.reflect();
-                if (Now - EnemyRegularlyTick > 3000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
+                if (Now - EnemyRegularlyTick > 5000 - ((Date.now() - enemy.SpawnTime()) / 100)) {
                     enemies.forEach(function(ene){
                       if(ene.isAlive()){
                       ene.fire();
