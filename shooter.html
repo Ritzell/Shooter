@@ -70,7 +70,7 @@ bgmAudio.loop = 'true';
 bgmAudio.play();
 bgmAudio.playbackRate = 1;
 
-function Enemy(canvas,size) {
+function Enemy(canvas,size,PosX) {
 
     var x, y;
     var vx, vy;
@@ -81,16 +81,16 @@ function Enemy(canvas,size) {
 
     var bullets = [];
 
-    var er = 5+life; // enemy radius
+    var er = 5+size; // enemy radius
     var br = 3; // bullet radius
 
     var SpawnTick;
 
     function spawn() {
-        x = canvas.width * Math.random();
+        x = PosX;//canvas.width * Math.random();
         y = er * 2 + er / 3;
-        vy = 0.1;
-        vx = 1;
+        vy = 0;
+        vx = 0;
         SpawnTick = Date.now();
     };
     spawn();
@@ -101,14 +101,12 @@ function Enemy(canvas,size) {
     lifeProp[1] = {
         color: 'red',
         fireP: 0.005,
-        numB: 5,
+        numB: 4+(size/5),
         daze: 0
     };
 
     this.draw = function(ctx) {
-        if (timeScale < 1) {
-            ctx.drawImage(slowImg, 0, 0, canvas.width, canvas.height);
-        }
+
         if (dying) {
             explode.draw(ctx, x, y);
         } else if (1 <= life) {
@@ -140,9 +138,9 @@ function Enemy(canvas,size) {
     };
 
     this.fire = function() {
-        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 3000));
+        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 3000))-2;
         for (var i = 0; i < n; i++) {
-            var th = i * Math.PI / n;
+            var th = ((i+0.5) * Math.PI / n);
             var vx = Math.round(150 * Math.cos(th));
             var vy = Math.round(150 * Math.sin(th));
             var bullet = {
@@ -284,10 +282,15 @@ var wave = 1;
 
 function init(canvas) {
     enemies = [];
+    if(wave % 5 == 0){
+      enemies.push(new Enemy(canvas,10*wave/5,canvas.width/2));
+    }else{
     for (var i = 0; i < wave; i++) {
-        enemies.push(new Enemy(canvas,5));
+        enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/(wave+1)*(i+1)));
+        console.log(canvas.width/(wave+1)*(i+1));
         //enemies[i].Boss();
     }
+  }
 }
 
 var Rotate = Math.random() <= 0.5 ? true : false;
@@ -384,7 +387,7 @@ window.onload = function() {
             keys[32] ++; // pretend key repeat
         }
 
-        var msg, bossmsg;
+        var msg;
         var drawEnemies = false;
         var drawPlayer = false;
         var drawStatus = false;
@@ -439,7 +442,7 @@ window.onload = function() {
                 break;
             case Status.gameOver:
             var clear = wave-1;
-                msg = 'GameOver! \n' + clear + 'Waveまでクリア！';
+                msg = clear != 0 ? 'GameOver! \n' + clear + 'Waveまでクリア！' : "頑張ってWaveをクリアしよう！";
                 drawEnemies = true;
                 drawStatus = true;
                 break;
@@ -491,7 +494,11 @@ window.onload = function() {
 
                 enemy.reflect();
                 if (Now - EnemyRegularlyTick > 6000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
-                    enemy.fire();
+                    enemies.forEach(function(ene){
+                      if(ene.isAlive()){
+                      ene.fire();
+                    }
+                    });
                     EnemyRegularlyTick = Date.now();
                 }
                 //   } else if(Now - EnemyRegularlyTick < 6000){
@@ -580,17 +587,26 @@ window.onload = function() {
         }
 
         if (msg && status == Status.gameOver) {
-            ctx.font = '40pt Calibri';
+            ctx.font = '30pt Calibri';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+            fillTextLine(ctx,msg, canvas.width / 2, canvas.height / 2);
         }
-
+        if (timeScale < 1) {
+            ctx.drawImage(slowImg, 0, 0, canvas.width, canvas.height);
+        }
         ctx.restore();
-
         requestAnimationFrame(loop);
     })();
+};
+
+var fillTextLine = function(context, text, x, y) {
+  var textList = text.split('\n');
+  var lineHeight = context.measureText("あ").width;
+  textList.forEach(function(text, i) {
+    context.fillText(text, x, y+lineHeight*i);
+  });
 };
 
 </script>
