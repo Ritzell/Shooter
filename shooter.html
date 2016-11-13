@@ -38,7 +38,7 @@ canvas {
 
 <script>
 
-"use strict";
+    "use strict";
 
 var shotAudio = document.getElementById('shotAudio');
 var explosionAudio = document.getElementById('explosionAudio');
@@ -70,25 +70,25 @@ bgmAudio.loop = 'true';
 bgmAudio.play();
 bgmAudio.playbackRate = 1;
 
-function Enemy(canvas) {
+function Enemy(canvas,size) {
 
     var x, y;
     var vx, vy;
 
-    var life = 50;
+    var life = size;
     var dying = false;
     var explode = new Explode();
 
     var bullets = [];
 
-    var er = 10; // enemy radius
+    var er = 5+life; // enemy radius
     var br = 3; // bullet radius
 
     var SpawnTick;
 
     function spawn() {
-        x = canvas.width*Math.random();
-        y = er*2 + er/3;
+        x = canvas.width * Math.random();
+        y = er * 2 + er / 3;
         vy = 0.1;
         vx = 1;
         SpawnTick = Date.now();
@@ -98,71 +98,95 @@ function Enemy(canvas) {
     var lifeProp = [];
     // lifeProp[life/1] = { color: 'white',  fireP: 0.001, numB:  4, daze: 0 };
     // lifeProp[life/2] = { color: 'yellow', fireP: 0.005, numB: 10, daze: 2 };
-    lifeProp[1] = { color: 'red',    fireP: 0.005,  numB: 5, daze: 0 };
+    lifeProp[1] = {
+        color: 'red',
+        fireP: 0.005,
+        numB: 5,
+        daze: 0
+    };
 
     this.draw = function(ctx) {
-      if(timeScale < 1){
-        ctx.drawImage(slowImg,0,0,canvas.width,canvas.height);
-      }
+        if (timeScale < 1) {
+            ctx.drawImage(slowImg, 0, 0, canvas.width, canvas.height);
+        }
         if (dying) {
             explode.draw(ctx, x, y);
         } else if (1 <= life) {
             ctx.beginPath();
+
             ctx.fillStyle = lifeProp[1].color;
-            ctx.arc(x, y, er, 0, Math.PI*2, false);
+            ctx.arc(x, y, er, 0, Math.PI * 2, false);
             ctx.fill();
+            var healthText = life;
+            ctx.font = '20pt Calibri';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(healthText, x, y);
         }
 
         bullets.forEach(function(bullet) {
             var x = bullet.x;
             var y = bullet.y;
             ctx.beginPath();
-            ctx.fillStyle = 'hsl(' + 360*bullet.life + ', 100%, 50%)';
-            ctx.arc(x, y, br, 0, Math.PI*2, false);
+            ctx.fillStyle = 'hsl(' + 360 * bullet.life + ', 100%, 50%)';
+            ctx.arc(x, y, br, 0, Math.PI * 2, false);
             ctx.fill();
         });
     };
 
-    this.SpawnTime = function(){
-      return SpawnTick;
+    this.SpawnTime = function() {
+        return SpawnTick;
     };
 
     this.fire = function() {
-        var n = lifeProp[1].numB+Math.round(((Date.now() - SpawnTick)/3000));
+        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 3000));
         for (var i = 0; i < n; i++) {
-            var th = i*Math.PI/n;
-            var vx = Math.round(150*Math.cos(th));
-            var vy = Math.round(150*Math.sin(th));
-            var bullet = { x: x, y: y, vx: vx, vy: vy, life: 1 };
+            var th = i * Math.PI / n;
+            var vx = Math.round(150 * Math.cos(th));
+            var vy = Math.round(150 * Math.sin(th));
+            var bullet = {
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                life: 1
+            };
             bullets.push(bullet);
         }
         playSE(enemyShotAudio);
     };
 
     this.fireRotate = function(ticks) {
-        var n = lifeProp[1].numB/5;
+        var n = lifeProp[1].numB / 5;
         for (var i = 0; i < n; i++) {
-            var th = (i*Math.PI/n/3)+ticks;
-            var vx = 150*Math.cos(th);
-            var vy = 150*Math.sin(th);
-            var bullet = { x: x, y: y, vx: vx, vy: vy, life: 1 };
+            var th = (i * Math.PI / n / 3) + ticks;
+            var vx = 150 * Math.cos(th);
+            var vy = 150 * Math.sin(th);
+            var bullet = {
+                x: x,
+                y: y,
+                vx: vx,
+                vy: vy,
+                life: 1
+            };
             bullets.push(bullet);
         }
         playSE(enemyShotAudio);
     };
 
-    this.reflect = function(){
-      if(x > canvas.width || x < 0){
-        vx *= -1;
-      }
+    this.reflect = function() {
+        if (x > canvas.width || x < 0) {
+            vx *= -1;
+        }
     }
-    this.health = function(){
-      return life;
+    this.health = function() {
+        return life;
     };
 
     this.fireAtRandom = function() {
         if (Math.random() < lifeProp[1].fireP) {
-          this.fire();
+            this.fire();
             return true;
         }
         return false;
@@ -171,7 +195,7 @@ function Enemy(canvas) {
     this.hit = function(tx, ty, r) {
         var dx = tx - x;
         var dy = ty - y;
-        if (dx*dx + dy*dy < (er + r)*(er + r)) {
+        if (dx * dx + dy * dy < (er + r) * (er + r)) {
             return true;
             explode.draw(ctx, x, y);
         }
@@ -183,7 +207,7 @@ function Enemy(canvas) {
             var bullet = bullets[i];
             var dx = tx - bullet.x;
             var dy = ty - bullet.y;
-            if (dx*dx + dy*dy < (br + r)*(br + r)) {
+            if (dx * dx + dy * dy < (br + r) * (br + r)) {
                 return true;
             }
         }
@@ -191,7 +215,7 @@ function Enemy(canvas) {
     };
 
     var lastTick;
-    var th = Math.PI*Math.random();
+    var th = Math.PI * Math.random();
 
     this.update = function() {
 
@@ -206,23 +230,21 @@ function Enemy(canvas) {
         var tick = Date.now();
         var dt = tick - lastTick;
         if (0 < life) {
-            x += dt*vx/1000 * timeScale;
-            x += lifeProp[1].daze*Math.cos(th);
-            th += 1.5*dt*2*Math.PI/1000;
-            y += dt*vy/1000 * timeScale;
-            if (x < -er
-            || canvas.width + er < x
-            || canvas.height + er < y) {
+            x += dt * vx / 1000 * timeScale;
+            x += lifeProp[1].daze * Math.cos(th);
+            th += 1.5 * dt * 2 * Math.PI / 1000;
+            y += dt * vy / 1000 * timeScale;
+            if (x < -er || canvas.width + er < x || canvas.height + er < y) {
                 spawn();
             }
         }
         bullets.forEach(function(bullet) {
-            if (bullet.x < 0 || bullet.x > canvas.width ) {
-                  bullet.vx *= -1;
+            if (bullet.x < 0 || bullet.x > canvas.width) {
+                bullet.vx *= -1;
             }
-            bullet.x += dt*bullet.vx/1000 * timeScale;
-            bullet.y += dt*bullet.vy/1000 * timeScale;
-            bullet.life -= dt/10000/1.0 * timeScale;
+            bullet.x += dt * bullet.vx / 1000 * timeScale;
+            bullet.y += dt * bullet.vy / 1000 * timeScale;
+            bullet.life -= dt / 10000 / 1.0 * timeScale;
         });
 
         bullets = bullets.filter(function(bullet) {
@@ -249,20 +271,22 @@ function Enemy(canvas) {
         return 1 <= life;
     };
 
-    this.Boss = function(){
-      er = 30;
-      vy = 0;
-      vx = 15;
+    this.Boss = function() {
+        er = 30;
+        vy = 0;
+        vx = 15;
     };
 }
 
 var enemies;
+var wave = 1;
 
-function init(canvas, n) {
+
+function init(canvas) {
     enemies = [];
-    for (var i = 0; i < n/3; i++) {
-        enemies.push(new Enemy(canvas));
-        enemies[i].Boss();
+    for (var i = 0; i < wave; i++) {
+        enemies.push(new Enemy(canvas,5));
+        //enemies[i].Boss();
     }
 }
 
@@ -275,34 +299,40 @@ window.onload = function() {
     var w = canvas.width;
     var h = canvas.height;
 
-    var Status = { title:0, toStart:1, countDown:2,
-                   inGame:3, gameClear:4, dying:5, gameOver:6 };
+    var Status = {
+        title: 0,
+        toStart: 1,
+        countDown: 2,
+        inGame: 3,
+        gameClear: 4,
+        dying: 5,
+        gameOver: 6
+    };
     var status = Status.title;
 
     var count;
     var myX, myY;
     var bullets, lastShoot;
     var explode = new Explode();
-    var numEnemies;
     var keys = [];
 
     document.onkeydown = function(e) {
         if (!keys[e.keyCode]) keys[e.keyCode] = 0;
-        if(e.keyCode == 32) {
-          timeScale = 0.25;
-          bgmAudio.playbackRate = 0.5;
-          enemyShotAudio.playbackRate = 0.5;
-          shotAudio.playbackRate = 0.5;
+        if (e.keyCode == 32) {
+            timeScale = 0.25;
+            bgmAudio.playbackRate = 0.5;
+            enemyShotAudio.playbackRate = 0.5;
+            shotAudio.playbackRate = 0.5;
         }
-        keys[e.keyCode]++;
+        keys[e.keyCode] ++;
     };
     document.onkeyup = function(e) {
         keys[e.keyCode] = 0;
-        if(e.keyCode == 32){
-          timeScale = 1;
-          bgmAudio.playbackRate = timeScale;
-          enemyShotAudio.playbackRate = timeScale;
-          shotAudio.playbackRate = timeScale;
+        if (e.keyCode == 32) {
+            timeScale = 1;
+            bgmAudio.playbackRate = timeScale;
+            enemyShotAudio.playbackRate = timeScale;
+            shotAudio.playbackRate = timeScale;
         }
     };
     var StartSlowTick = Date.now();
@@ -311,11 +341,10 @@ window.onload = function() {
 
     (function loop() {
         var tick = Date.now();
-        if(timeScale == 0.25 && tick - StartSlowTick > 8000){
-
-          timeScale = 1;
-        } else if(timeScale == 1){
-          StartSlowTick = Date.now();
+        if (timeScale == 0.25 && tick - StartSlowTick > 8000) {
+            timeScale = 1;
+        } else if (timeScale == 1) {
+            StartSlowTick = Date.now();
         }
         ctx.save();
         ctx.clearRect(0, 0, w, h);
@@ -323,8 +352,8 @@ window.onload = function() {
 
 
         if (bgReady) {
-            var sx = (bgImg.width - canvas.width)/2;
-            var dy = (tick - startTick)/100 % bgImg.height;
+            var sx = (bgImg.width - canvas.width) / 2;
+            var dy = (tick - startTick) / 100 % bgImg.height;
 
             ctx.drawImage(bgImg,
                 sx, 0, canvas.width, canvas.height - dy,
@@ -334,13 +363,13 @@ window.onload = function() {
                 sx, bgImg.height - dy, canvas.width, dy,
                 0, 0, canvas.width, dy);
 
-          //   ctx.fillStyle = 'rgb(255,00,00)'; //塗りつぶしの色は赤
-          //   if(enemies.length != 0){
-          //   ctx.fillRect(5,0, canvas.width * enemies[enemies.length].life/15,30);
-          // }
+            //   ctx.fillStyle = 'rgb(255,00,00)'; //塗りつぶしの色は赤
+            //   if(enemies.length != 0){
+            //   ctx.fillRect(5,0, canvas.width * enemies[enemies.length].life/15,30);
+            // }
         }
 
-        if (keys[32 /*space*/] == 1) {
+        if (keys[32 /*space*/ ] == 1) {
             if (status == Status.title) {
                 status = Status.toStart;
                 muteSE = false;
@@ -352,78 +381,87 @@ window.onload = function() {
                 status = Status.toStart;
                 muteSE = false;
             }
-            keys[32]++; // pretend key repeat
+            keys[32] ++; // pretend key repeat
         }
 
-        var msg,bossmsg;
+        var msg, bossmsg;
         var drawEnemies = false;
         var drawPlayer = false;
         var drawStatus = false;
 
         switch (status) {
-        case Status.title:
-            msg = 'Press space to start';
-            numEnemies = 1;
-            break;
-        case Status.toStart:
-            myX = canvas.width/2;
-            myY = 4*canvas.height/5;
-            bullets = [];
-            init(canvas, numEnemies);
-            status = Status.countDown;
-            count = 3;
-            (function() {
-                setTimeout(function loop() {
-                    if (--count < 0) {
-                        status = Status.inGame;
-                    } else {
-                        setTimeout(loop, 1000);
-                    }
-                }, 1000);
-            })();
-            //break; // intentionally fall through
-        case Status.countDown:
-            msg = "" + count;
-            drawPlayer = true;
-            drawStatus = true;
-            break;
-        case Status.inGame:
-          StartTick = Date.now();
-            drawEnemies = true;
-            drawPlayer = true;
-            drawStatus = true;
-            break;
-        case Status.gameClear:
-            msg = 'GAME CLEAR!!!';
-            drawEnemies = true;
-            drawPlayer = true;
-            drawStatus = true;
-            break;
-        case Status.dying:
-            explode.draw(ctx, myX, myY);
-            if (!explode.update()) {
-                status = Status.gameOver;
-                muteSE = true;
-            }
-            drawEnemies = true;
-            drawStatus = true;
-            break;
-        case Status.gameOver:
-            msg = 'GameOver! 敵の体力は残り' + enemies[0].health();
-            drawEnemies = true;
-            drawStatus = true;
-            break;
-        default:
-            console.log('unknown status: ' + status);
+            case Status.title:
+                msg = 'Press space to start';
+                wave = 1;
+                break;
+            case Status.toStart:
+                myX = canvas.width / 2;
+                myY = 4 * canvas.height / 5;
+                bullets = [];
+                init(canvas);
+                status = Status.countDown;
+                count = 3;
+                (function() {
+                    setTimeout(function loop() {
+                        if (--count < 0) {
+                            status = Status.inGame;
+                        } else {
+                            setTimeout(loop, 1000);
+                        }
+                    }, 1000);
+                })();
+                //break; // intentionally fall through
+            case Status.countDown:
+                msg = "" + count;
+                drawPlayer = true;
+                drawStatus = true;
+                break;
+            case Status.inGame:
+                StartTick = Date.now();
+                drawEnemies = true;
+                drawPlayer = true;
+                drawStatus = true;
+                break;
+            case Status.gameClear:
+                msg = 'GAME CLEAR!!!';
+                drawEnemies = true;
+                drawPlayer = true;
+                drawStatus = true;
+                break;
+            case Status.dying:
+                explode.draw(ctx, myX, myY);
+                if (!explode.update()) {
+                    status = Status.gameOver;
+                    muteSE = true;
+                }
+                drawEnemies = true;
+                drawStatus = true;
+                break;
+            case Status.gameOver:
+            var clear = wave-1;
+                msg = 'GameOver! \n' + clear + 'Waveまでクリア！';
+                drawEnemies = true;
+                drawStatus = true;
+                break;
+            default:
+                console.log('unknown status: ' + status);
         }
 
         if (drawPlayer) {
 
-            if (keys[39 /*Right*/]) { myX += 2 * timeScale; }
-            if (keys[37 /*Left */]) { myX -= 2 * timeScale; }
-            if (keys[38 /*Up   */]) { myY -= 2 * timeScale; }
-            if (keys[40 /*Down */]) { myY += 2 * timeScale; }
-            if (keys[90 /* z */]) {
+            if (keys[39 /*Right*/ ]) {
+                myX += 2 * timeScale;
+            }
+            if (keys[37 /*Left */ ]) {
+                myX -= 2 * timeScale;
+            }
+            if (keys[38 /*Up   */ ]) {
+                myY -= 2 * timeScale;
+            }
+            if (keys[40 /*Down */ ]) {
+                myY += 2 * timeScale;
+            }
+            if (keys[90 /* z */ ]) {
                 if (lastShoot == undefined || 150 / timeScale < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
@@ -450,26 +488,26 @@ window.onload = function() {
         drawEnemies && enemies.forEach(function(enemy) {
             enemy.update();
             if (enemy.isAlive()) {
+
                 enemy.reflect();
-                if(Now - EnemyRegularlyTick > 6000 - ((Date.now() - enemy.SpawnTime())/60)){
-                  enemy.fire();
-                  EnemyRegularlyTick = Date.now();
+                if (Now - EnemyRegularlyTick > 6000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
+                    enemy.fire();
+                    EnemyRegularlyTick = Date.now();
                 }
-              //   } else if(Now - EnemyRegularlyTick < 6000){
-              //     if(Rotate){
-              //     enemy.fireRotate(Math.round(Now - EnemyRegularlyTick/500));
-              //   } else {
-              //     enemy.fireRotate(0);
-              //   }
-              // }else{
-              //   EnemyRegularlyTick = Date.now();
-              //   Rotate  = Math.random() <= 0.5 ? true : false;
-              // }
+                //   } else if(Now - EnemyRegularlyTick < 6000){
+                //     if(Rotate){
+                //     enemy.fireRotate(Math.round(Now - EnemyRegularlyTick/500));
+                //   } else {
+                //     enemy.fireRotate(0);
+                //   }
+                // }else{
+                //   EnemyRegularlyTick = Date.now();
+                //   Rotate  = Math.random() <= 0.5 ? true : false;
+                // }
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
-            if ((enemy.isAlive() && enemy.hit(myX, myY, myR))
-            || enemy.bulletsHit(myX, myY, myR)) {
+            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) || enemy.bulletsHit(myX, myY, myR)) {
                 explode.reset();
                 status = Status.dying;
                 playSE(deadAudio);
@@ -485,7 +523,7 @@ window.onload = function() {
             ctx.fill();
             ctx.beginPath();
             ctx.fillStyle = 'skyBlue';
-            ctx.arc(myX, myY, myR, 0, Math.PI*2, false);
+            ctx.arc(myX, myY, myR, 0, Math.PI * 2, false);
             ctx.fill();
         }
 
@@ -496,7 +534,7 @@ window.onload = function() {
             ctx.fillStyle = 'yellow';
             var x = bullet.x;
             var y = bullet.y;
-            ctx.arc(x, y, 2, 0, Math.PI*2, false);
+            ctx.arc(x, y, 2, 0, Math.PI * 2, false);
             ctx.fill();
             drawEnemies && enemies.forEach(function(enemy) {
                 if (enemy.isAlive() && enemy.hit(x, y, 2)) {
@@ -511,14 +549,19 @@ window.onload = function() {
         });
 
         if (drawStatus) {
-            var remainingEnemies = enemies[0].health();
-            // enemies.filter(function(enemy) {
-            //     return enemies[0].life;//enemy.isAlive();
-            // }).length;
+            // var remainingEnemies = enemies[0].health();
+            var remainingEnemies = enemies.filter(function(enemy) {
+                return enemy.isAlive();
+            }).length;
             if (status == Status.inGame && remainingEnemies <= 0) {
-                status = Status.gameClear;
-                muteSE = true;
-                numEnemies++;
+                // if(wave < Waves.length-1){
+                wave++;
+                status = Status.toStart;
+                // }else{
+                //   status = Status.gameClear;
+                //   muteSE = true;
+                //   numEnemies++;
+                // }
             }
             ctx.font = '20pt Calibri';
             ctx.fillStyle = 'white';
@@ -533,15 +576,15 @@ window.onload = function() {
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width/2, canvas.height/2);
+            ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
         }
 
         if (msg && status == Status.gameOver) {
-            ctx.font = '20pt Calibri';
+            ctx.font = '40pt Calibri';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width/2, canvas.height/2);
+            ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
         }
 
         ctx.restore();
