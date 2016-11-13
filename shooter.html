@@ -317,13 +317,6 @@ function init(canvas) {
     }
   }
 }
-
-function AllClear(){
-  return enemies.filter(function(enemy){
-          return enemy.isAlive();
-        }).length == enemies.length;
-  }
-
 var Rotate = Math.random() <= 0.5 ? true : false;
 window.onload = function() {
 
@@ -526,7 +519,6 @@ window.onload = function() {
         drawEnemies && enemies.forEach(function(enemy) {
             enemy.update();
             if (enemy.isAlive()) {
-
                 enemy.reflect();
                 if (Now - EnemyRegularlyTick > 3000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
                     enemies.forEach(function(ene){
@@ -539,7 +531,7 @@ window.onload = function() {
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
-            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  !AllClear && enemy.bulletsHit(myX, myY, myR)) {
+            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  enemy.bulletsHit(myX, myY, myR)) {
                 explode.reset();
                 status = Status.dying;
                 playSE(deadAudio);
