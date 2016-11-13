@@ -46,6 +46,7 @@ var enemyShotAudio = document.getElementById('enemyShotAudio');
 var deadAudio = document.getElementById('deadAudio');
 var bgmAudio = document.getElementById('bgmAudio');
 var muteSE = true;
+var audioVolume = 0.1;
 
 function playSE(audio) {
     if (muteSE) return;
@@ -69,6 +70,11 @@ slowImg.src = 'slow.png';
 bgmAudio.loop = 'true';
 bgmAudio.play();
 bgmAudio.playbackRate = 1;
+bgmAudio.volume = audioVolume;
+shotAudio.volume = audioVolume;
+explosionAudio.volume = audioVolume;
+enemyShotAudio.volume = audioVolume;
+deadAudio.volume = audioVolume;
 
 function Enemy(canvas,size,PosX) {
 
@@ -93,6 +99,7 @@ function Enemy(canvas,size,PosX) {
         vx = 0;
         SpawnTick = Date.now();
     };
+
     spawn();
     //aa
     var lifeProp = [];
@@ -101,14 +108,23 @@ function Enemy(canvas,size,PosX) {
     lifeProp[1] = {
         color: 'red',
         fireP: 0.005,
-        numB: 4+(size/5),
+        numB: 5+(size/5),
         daze: 0
+    };
+
+    this.position = function(isX){
+      if(isX) {
+        return x;
+      }else{
+        return y;
+      }
     };
 
     this.draw = function(ctx) {
 
         if (dying) {
             explode.draw(ctx, x, y);
+
         } else if (1 <= life) {
             ctx.beginPath();
 
@@ -138,7 +154,7 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.fire = function() {
-        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 3000))-2;
+        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 6000))-2;
         for (var i = 0; i < n; i++) {
             var th = ((i+0.5) * Math.PI / n);
             var vx = Math.round(150 * Math.cos(th));
@@ -212,9 +228,12 @@ function Enemy(canvas,size,PosX) {
         return false;
     };
 
+    this.explodeState = function(){
+      return explode.update();
+    };
+
     var lastTick;
     var th = Math.PI * Math.random();
-
     this.update = function() {
 
         if (dying && !explode.update()) {
@@ -240,8 +259,8 @@ function Enemy(canvas,size,PosX) {
             if (bullet.x < 0 || bullet.x > canvas.width) {
                 bullet.vx *= -1;
             }
-            bullet.x += dt * bullet.vx / 1000 * timeScale;
-            bullet.y += dt * bullet.vy / 1000 * timeScale;
+            bullet.x += dt * bullet.vx*50 / 1000 * timeScale * (dt/1000);
+            bullet.y += dt * bullet.vy*50 / 1000 * timeScale * (dt/1000);
             bullet.life -= dt / 10000 / 1.0 * timeScale;
         });
 
@@ -254,11 +273,17 @@ function Enemy(canvas,size,PosX) {
     this.die = function() {
         dying = true;
         playSE(explosionAudio);
+        enemies.forEach(function(enemy){
+          if(enemy.isAlive() && enemy.hit(x,y,35)) {
+            enemy.damage(Math.round((er-5)*0.7));
+          }
+        });
         explode.reset();
     };
 
-    this.damage = function() {
-        if (--life <= 0) {
+    this.damage = function(power) {
+      life -= power;
+        if (life <= 0) {
             this.die();
         } else {
             this.fire();
@@ -292,6 +317,12 @@ function init(canvas) {
     }
   }
 }
+
+function AllClear(){
+  return enemies.filter(function(enemy){
+          return enemy.isAlive();
+        }).length == enemies.length;
+  }
 
 var Rotate = Math.random() <= 0.5 ? true : false;
 window.onload = function() {
@@ -341,9 +372,13 @@ window.onload = function() {
     var StartSlowTick = Date.now();
     var EnemyRegularlyTick = Date.now();
     var startTick = Date.now();
-
+    var lastLoopTick;
     (function loop() {
         var tick = Date.now();
+        if(lastLoopTick == undefined){
+          lastLoopTick = Date.now();
+        }
+        var loopDt = tick - lastLoopTick;
         if (timeScale == 0.25 && tick - StartSlowTick > 8000) {
             timeScale = 1;
         } else if (timeScale == 1) {
@@ -453,19 +488,19 @@ window.onload = function() {
         if (drawPlayer) {
 
             if (keys[39 /*Right*/ ]) {
-                myX += 2 * timeScale;
+                myX += 100 * timeScale　* (loopDt / 1000);
             }
             if (keys[37 /*Left */ ]) {
-                myX -= 2 * timeScale;
+                myX -= 100 * timeScale　* (loopDt / 1000)
             }
             if (keys[38 /*Up   */ ]) {
-                myY -= 2 * timeScale;
+                myY -= 100 * timeScale　* (loopDt / 1000)
             }
             if (keys[40 /*Down */ ]) {
-                myY += 2 * timeScale;
+                myY += 100 * timeScale　* (loopDt / 1000)
             }
             if (keys[90 /* z */ ]) {
-                if (lastShoot == undefined || 150 / timeScale < tick - lastShoot) {
+                if (lastShoot == undefined || 400 / timeScale < tick - lastShoot) {
                     var bulletNotInUse = bullets.filter(function(bullet) {
                         return !bullet.inUse;
                     });
@@ -493,7 +528,7 @@ window.onload = function() {
             if (enemy.isAlive()) {
 
                 enemy.reflect();
-                if (Now - EnemyRegularlyTick > 6000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
+                if (Now - EnemyRegularlyTick > 3000 - ((Date.now() - enemy.SpawnTime()) / 60)) {
                     enemies.forEach(function(ene){
                       if(ene.isAlive()){
                       ene.fire();
@@ -501,20 +536,10 @@ window.onload = function() {
                     });
                     EnemyRegularlyTick = Date.now();
                 }
-                //   } else if(Now - EnemyRegularlyTick < 6000){
-                //     if(Rotate){
-                //     enemy.fireRotate(Math.round(Now - EnemyRegularlyTick/500));
-                //   } else {
-                //     enemy.fireRotate(0);
-                //   }
-                // }else{
-                //   EnemyRegularlyTick = Date.now();
-                //   Rotate  = Math.random() <= 0.5 ? true : false;
-                // }
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
-            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) || enemy.bulletsHit(myX, myY, myR)) {
+            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  !AllClear && enemy.bulletsHit(myX, myY, myR)) {
                 explode.reset();
                 status = Status.dying;
                 playSE(deadAudio);
@@ -545,7 +570,7 @@ window.onload = function() {
             ctx.fill();
             drawEnemies && enemies.forEach(function(enemy) {
                 if (enemy.isAlive() && enemy.hit(x, y, 2)) {
-                    enemy.damage();
+                    enemy.damage(1);
                     bullet.inUse = false;
                 }
             });
@@ -556,19 +581,16 @@ window.onload = function() {
         });
 
         if (drawStatus) {
-            // var remainingEnemies = enemies[0].health();
             var remainingEnemies = enemies.filter(function(enemy) {
                 return enemy.isAlive();
             }).length;
             if (status == Status.inGame && remainingEnemies <= 0) {
-                // if(wave < Waves.length-1){
+                if(enemies.filter(function(enemy){
+                  return enemy.explodeState();
+                }).length == 0){
                 wave++;
                 status = Status.toStart;
-                // }else{
-                //   status = Status.gameClear;
-                //   muteSE = true;
-                //   numEnemies++;
-                // }
+              }
             }
             ctx.font = '20pt Calibri';
             ctx.fillStyle = 'white';
@@ -597,6 +619,7 @@ window.onload = function() {
             ctx.drawImage(slowImg, 0, 0, canvas.width, canvas.height);
         }
         ctx.restore();
+        lastLoopTick = Date.now();
         requestAnimationFrame(loop);
     })();
 };
