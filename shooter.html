@@ -273,11 +273,14 @@ function Enemy(canvas,size,PosX) {
             }
         }
         bullets.forEach(function(bullet) {
-            if (bullet.x < 0 || bullet.x > canvas.width) {
+          var vxTime = dt * bullet.vx / 1000 * timeScale;
+          var vyTime = dt * bullet.vy / 1000 * timeScale;
+            if (bullet.x - 3 + vxTime < 0 || bullet.x + 3 + vxTime > canvas.width) {
                 bullet.vx *= -1;
+                vxTime *= -1;
             }
-            bullet.x += dt * bullet.vx / 1000 * timeScale;
-            bullet.y += dt * bullet.vy / 1000 * timeScale;
+            bullet.x += vxTime;
+            bullet.y += vyTime;
             bullet.life -= dt / 10000 / 1.0 * timeScale;
         });
 
