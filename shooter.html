@@ -8,7 +8,6 @@ canvas {
 }
 </style>
 
-<!-- http://taira-komori.jpn.org/sound/ -->
 <audio id="shotAudio">
   <source src="laser2.mp3">
   Your WEB browser does not support audio tag.
@@ -172,22 +171,6 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.CounterFire = function() {
-<<<<<<< HEAD
-        var n = (lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2)/1;
-        for (var i = 0; i < n; i++) {
-            var th = ((i+0.5) * Math.PI / n);
-            var vx = Math.round(150 * Math.cos(th));
-            var vy = Math.round(150 * Math.sin(th));
-            var bullet = {
-                x: x,
-                y: y,
-                vx: vx,
-                vy: vy,
-                life: 1
-            };
-            bullets.push(bullet);
-        }
-=======
       var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2;
       for (var i = 1; i < n+1; i++) {
           var th = (i * Math.PI / (n+1));
@@ -202,7 +185,6 @@ function Enemy(canvas,size,PosX) {
           };
           bullets.push(bullet);
       }
->>>>>>> bc1a192a4cec7687bc615e4800619b91e15f54df
         playSE(enemyShotAudio);
     };
 
