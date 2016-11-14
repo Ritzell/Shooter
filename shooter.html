@@ -156,8 +156,8 @@ function Enemy(canvas,size,PosX) {
         var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2;
         for (var i = 1; i < n+1; i++) {
             var th = (i * Math.PI / (n+1));
-            var vx = Math.round(180 * Math.cos(th));
-            var vy = Math.round(180 * Math.sin(th));
+            var vx = Math.round(150 * Math.cos(th));
+            var vy = Math.round(150 * Math.sin(th));
             var bullet = {
                 x: x,
                 y: y,
@@ -276,8 +276,8 @@ function Enemy(canvas,size,PosX) {
             if (bullet.x < 0 || bullet.x > canvas.width) {
                 bullet.vx *= -1;
             }
-            bullet.x += dt * bullet.vx*50 / 1000 * timeScale * (dt/1000);
-            bullet.y += dt * bullet.vy*50 / 1000 * timeScale * (dt/1000);
+            bullet.x += dt * bullet.vx / 1000 * timeScale;
+            bullet.y += dt * bullet.vy / 1000 * timeScale;
             bullet.life -= dt / 10000 / 1.0 * timeScale;
         });
 
@@ -509,16 +509,16 @@ window.onload = function() {
         if (drawPlayer) {
 
             if (keys[39 /*Right*/ ]) {
-                myX += 100 * timeScale　* (loopDt / 1000);
+                myX += 1 * timeScale;
             }
             if (keys[37 /*Left */ ]) {
-                myX -= 100 * timeScale　* (loopDt / 1000)
+                myX -= 1 * timeScale;
             }
             if (keys[38 /*Up   */ ]) {
-                myY -= 100 * timeScale　* (loopDt / 1000)
+                myY -= 1 * timeScale;
             }
             if (keys[40 /*Down */ ]) {
-                myY += 100 * timeScale　* (loopDt / 1000)
+                myY += 1 * timeScale;
             }
             if (keys[90 /* z */ ]) {
                 if (lastShoot == undefined || 400 / timeScale < tick - lastShoot) {
