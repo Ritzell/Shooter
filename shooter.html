@@ -172,7 +172,7 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.CounterFire = function() {
-        var n = (lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2)/2;
+        var n = (lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2)/1;
         for (var i = 0; i < n; i++) {
             var th = ((i+0.5) * Math.PI / n);
             var vx = Math.round(150 * Math.cos(th));
