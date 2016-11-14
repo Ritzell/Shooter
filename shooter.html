@@ -472,7 +472,7 @@ window.onload = function() {
                 })();
                 //break; // intentionally fall through
             case Status.countDown:
-                msg = "" + count;
+                msg = 'Wave '+wave+'\n\n' + (count == 0 ? "Fight!" : count);
                 drawPlayer = true;
                 drawStatus = true;
                 break;
@@ -628,11 +628,12 @@ window.onload = function() {
         }
 
         if (msg && status != Status.gameOver) {
-            ctx.font = '40pt Calibri';
+            ctx.font = '30pt Calibri';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(msg, canvas.width / 2, canvas.height / 2);
+            fillTextLine(ctx,msg, canvas.width / 2, canvas.height / 2);
+
         }
 
         if (msg && status == Status.gameOver) {
@@ -654,6 +655,8 @@ window.onload = function() {
 var fillTextLine = function(context, text, x, y) {
   var textList = text.split('\n');
   var lineHeight = context.measureText("あ").width;
+  var textSize = textList.length-1;
+  y = y-(lineHeight*textSize);
   textList.forEach(function(text, i) {
     context.fillText(text, x, y+lineHeight*i);
   });
