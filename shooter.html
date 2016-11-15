@@ -60,6 +60,8 @@ var timeScale = 1.0;
 var vid = document.getElementById("bgmAudio");
 var StartTick;
 var elpasedTime;
+var playerHP = 2;
+var attackSpeed = 5000;
 bgImg.onload = function() {
     bgReady = true;
 };
@@ -75,11 +77,16 @@ explosionAudio.volume = audioVolume;
 enemyShotAudio.volume = audioVolume;
 deadAudio.volume = audioVolume;
 
-function Enemy(canvas,size,PosX) {
+var moveAxis = {
+  xAxis : 0,
+  yAxis : 1
+};
+
+function Enemy(canvas,size,PosX,Vx,Vy) {
 
     var x, y;
     var vx, vy;
-
+    var axis = moveAxis.xAxis;
     var life = size;
     var dying = false;
     var explode = new Explode();
@@ -94,8 +101,8 @@ function Enemy(canvas,size,PosX) {
     function spawn() {
         x = PosX;//canvas.width * Math.random();
         y = er /2 + 25;
-        vy = 0;
-        vx = 0;
+        vy = Vy;
+        vx = Vx;
         SpawnTick = Date.now();
     };
 
@@ -111,13 +118,12 @@ function Enemy(canvas,size,PosX) {
         daze: 0
     };
 
-    this.position = function(isX){
-      if(isX) {
-        return x;
-      }else{
-        return y;
-      }
-    };
+    this.vxSpeed = function(value){
+      vx = value;
+    }
+    this.vySpeed = function(value){
+      vy = value;
+    }
 
     this.draw = function(ctx) {
 
@@ -153,11 +159,11 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.fire = function() {
-        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2;
+        var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / (attackSpeed*2)))-1;
         for (var i = 1; i < n+1; i++) {
             var th = (i * Math.PI / (n+1));
-            var vx = Math.round(180 * Math.cos(th));
-            var vy = Math.round(180 * Math.sin(th));
+            var vx = Math.round(150 * Math.cos(th));
+            var vy = Math.round(150 * Math.sin(th));
             var bullet = {
                 x: x,
                 y: y,
@@ -171,11 +177,11 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.CounterFire = function() {
-      var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / 5000))-2;
+      var n = lifeProp[1].numB + Math.round(((Date.now() - SpawnTick) / (attackSpeed*2)))-3;
       for (var i = 1; i < n+1; i++) {
           var th = (i * Math.PI / (n+1));
-          var vx = Math.round(180 * Math.cos(th));
-          var vy = Math.round(180 * Math.sin(th));
+          var vx = Math.round(150 * Math.cos(th));
+          var vy = Math.round(150 * Math.sin(th));
           var bullet = {
               x: x,
               y: y,
@@ -207,8 +213,11 @@ function Enemy(canvas,size,PosX) {
     };
 
     this.reflect = function() {
-        if (x > canvas.width || x < 0) {
+        if (x+vx > canvas.width || x-er+vx < 0) {
             vx *= -1;
+        } else if(y+(er/2)+vy > er * 5 + 25 || y-(er/2)+vy < 0){
+          console.log(y+(er/2)+vy > er * 3 + 25);
+            vy *= -1;
         }
     }
     this.health = function() {
@@ -239,6 +248,7 @@ function Enemy(canvas,size,PosX) {
             var dx = tx - bullet.x;
             var dy = ty - bullet.y;
             if (dx * dx + dy * dy < (br + r) * (br + r)) {
+                bullets[i].life = 0;
                 return true;
             }
         }
@@ -273,11 +283,14 @@ function Enemy(canvas,size,PosX) {
             }
         }
         bullets.forEach(function(bullet) {
-            if (bullet.x < 0 || bullet.x > canvas.width) {
+          var vxTime = dt * bullet.vx / 1000 * timeScale;
+          var vyTime = dt * bullet.vy / 1000 * timeScale;
+            if (bullet.x - 3 + vxTime < 0 || bullet.x + 3 + vxTime > canvas.width) {
                 bullet.vx *= -1;
+                vxTime *= -1;
             }
-            bullet.x += dt * bullet.vx*50 / 1000 * timeScale * (dt/1000);
-            bullet.y += dt * bullet.vy*50 / 1000 * timeScale * (dt/1000);
+            bullet.x += vxTime;
+            bullet.y += vyTime;
             bullet.life -= dt / 10000 / 1.0 * timeScale;
         });
 
@@ -319,19 +332,55 @@ function Enemy(canvas,size,PosX) {
 }
 
 var enemies;
+var movers;
 var wave = 1;
+var stageState = {
+    addUnit: 1,
+    addHP: 2,
+    move: 3
+};
 
+function mobUnit(State,canvas){
+  enemies = [];
+  if(State == stageState.addUnit){
+    for (var i = 0; i < wave; i++) {
+        enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/(wave+1)*(i+1),0,0));
+        console.log(canvas.width/(wave+1)*(i+1));
+    }
+  }else if(State == stageState.addHP){
+    var waveStage = 5+Math.ceil(wave / 15);
+    for (var i = 0; i < waveStage; i++) {
+        enemies.push(new Enemy(canvas,5+(wave % 5 + (Math.floor(wave / 15)*4)),canvas.width/(waveStage+1)*(i+1),0,0));
+        console.log(canvas.width/(waveStage+1)*(i+1));
+    }
+  }else if(State == stageState.move){
+    movers = [];
+    var waveStage = 5+Math.ceil(wave / 15);
+    for (var i = 0; i < waveStage; i++) {
+        enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/(waveStage+1)*(i+1),20,20));
+        console.log(canvas.width/(waveStage+1)*(i+1));
+    }
+    movers = enemies;
+  }
+  return enemies;
+}
 
 function init(canvas) {
     enemies = [];
     if(wave % 5 == 0){
-      enemies.push(new Enemy(canvas,20*wave/5,canvas.width/2));
+      enemies.push(new Enemy(canvas,20*wave/5,canvas.width/2,0,0));
     }else{
-    for (var i = 0; i < wave; i++) {
-        enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/(wave+1)*(i+1)));
-        console.log(canvas.width/(wave+1)*(i+1));
-        //enemies[i].Boss();
-    }
+      var state  =　Math.ceil(wave / 5 % 3);
+      enemies = mobUnit(state,canvas);
+      // if(movers){
+      //   movers.forEach(function(enemy){
+      //     enemy.vxSpeed(20);
+      //
+      // }
+    // for (var i = 0; i < wave; i++) {
+    //     enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/(wave+1)*(i+1)));
+    //     console.log(canvas.width/(wave+1)*(i+1));
+    // }
   }
 }
 
@@ -409,7 +458,6 @@ window.onload = function() {
         ctx.clearRect(0, 0, w, h);
 
 
-
         if (bgReady) {
             var sx = (bgImg.width - canvas.width) / 2;
             var dy = (tick - startTick) / 40 % bgImg.height;
@@ -452,8 +500,9 @@ window.onload = function() {
             case Status.title:
                 myX = canvas.width / 2;
                 myY =4 * canvas.height / 5 ;
-                msg = 'Press space to start';
+                msg = 'スペースキーを押してゲームをスタートしよう！';
                 wave = 1;
+                playerHP = 2;
                 break;
             case Status.toStart:
                 bullets = [];
@@ -509,16 +558,16 @@ window.onload = function() {
         if (drawPlayer) {
 
             if (keys[39 /*Right*/ ]) {
-                myX += 100 * timeScale　* (loopDt / 1000);
+                myX += 1.5 * timeScale;
             }
             if (keys[37 /*Left */ ]) {
-                myX -= 100 * timeScale　* (loopDt / 1000)
+                myX -= 1.5 * timeScale;
             }
             if (keys[38 /*Up   */ ]) {
-                myY -= 100 * timeScale　* (loopDt / 1000)
+                myY -= 1.5 * timeScale;
             }
             if (keys[40 /*Down */ ]) {
-                myY += 100 * timeScale　* (loopDt / 1000)
+                myY += 1.5 * timeScale;
             }
             if (keys[90 /* z */ ]) {
                 if (lastShoot == undefined || 400 / timeScale < tick - lastShoot) {
@@ -552,13 +601,16 @@ window.onload = function() {
             enemy.draw(ctx);
             if (status != Status.inGame) return;
             if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  enemy.bulletsHit(myX, myY, myR)) {
+              playerHP -= 1;
+              playSE(deadAudio);
+              if(playerHP <= 0){
                 explode.reset();
                 status = Status.dying;
-                playSE(deadAudio);
+              }
             }
         });
 
-        if (drawEnemies && Now - EnemyRegularlyTick > 5000 - ((Date.now() - enemies[0].SpawnTime()) / 100)) {
+        if (drawEnemies && Now - EnemyRegularlyTick > attackSpeed - ((Date.now() - enemies[0].SpawnTime()) / 500)) {
           var order = nextOrder();
           if(enemies[order].isAlive()){
             enemies[order].fire();
@@ -573,7 +625,7 @@ window.onload = function() {
 
         if (drawPlayer) {
             ctx.beginPath();
-            ctx.fillStyle = 'green';
+            ctx.fillStyle = playerHP >= 2 ? 'green' : 'red';
             ctx.moveTo(myX, myY - 10);
             ctx.lineTo(myX + 10, myY + 10);
             ctx.lineTo(myX - 10, myY + 10);
@@ -627,7 +679,7 @@ window.onload = function() {
         }
 
         if (msg && status != Status.gameOver) {
-            ctx.font = '30pt Calibri';
+            ctx.font = '18pt Calibri';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
