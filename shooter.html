@@ -56,6 +56,7 @@ function playSE(audio) {
 var bgReady = false;
 var bgImg = new Image();
 var slowImg = new Image();
+var damageImage = new Image();
 var timeScale = 1.0;
 var vid = document.getElementById("bgmAudio");
 var StartTick;
@@ -68,6 +69,7 @@ bgImg.onload = function() {
 // https://www.nasa.gov/mission_pages/hubble/multimedia/index.html
 bgImg.src = 'hubble_friday_05062016.jpg';
 slowImg.src = 'slow.png';
+damageImage.src = 'damage.png';
 bgmAudio.loop = 'true';
 bgmAudio.play();
 bgmAudio.playbackRate = 1;
@@ -696,6 +698,9 @@ window.onload = function() {
         }
         if (timeScale < 1) {
             ctx.drawImage(slowImg, 0, 0, canvas.width, canvas.height);
+        }
+        if (playerHP < 2) {
+          ctx.drawImage(damageImage, 0, 0, canvas.width, canvas.height);
         }
         ctx.restore();
         lastLoopTick = Date.now();
