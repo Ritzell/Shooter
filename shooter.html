@@ -557,16 +557,16 @@ window.onload = function() {
 
         if (drawPlayer) {
 
-            if (keys[39 /*Right*/ ]) {
+            if (keys[39 /*Right*/ ] && myX + 1.5 < canvas.width) {
                 myX += 1.5;// * timeScale;
             }
-            if (keys[37 /*Left */ ]) {
+            if (keys[37 /*Left */ ] && myX - 1.5 > 0) {
                 myX -= 1.5;// * timeScale;
             }
-            if (keys[38 /*Up   */ ]) {
+            if (keys[38 /*Up   */ ] && myY - 1.5 > 0 ) {
                 myY -= 1.5;// * timeScale;
             }
-            if (keys[40 /*Down */ ]) {
+            if (keys[40 /*Down */ ] && myY + 1.5 < canvas.height) {
                 myY += 1.5;// * timeScale;
             }
             if (keys[90 /* z */ ]) {
