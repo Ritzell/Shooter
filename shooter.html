@@ -307,7 +307,9 @@ function Enemy(canvas,size,PosX,Vx,Vy) {
         playSE(explosionAudio);
         enemies.forEach(function(enemy){
           if(enemy.isAlive() && enemy.hit(x,y,65)) {
-            enemy.damage(Math.round((er-5)*0.7));
+            setTimeout(function(){
+              enemy.damage(Math.round((er-5)*0.7));
+            },200);
           }
         });
         explode.reset();
@@ -503,7 +505,7 @@ window.onload = function() {
                 myX = canvas.width / 2;
                 myY =4 * canvas.height / 5 ;
                 msg = 'スペースキーを押してゲームをスタートしよう！';
-                wave = 1;
+                wave = 11;
                 playerHP = 2;
                 break;
             case Status.toStart:
