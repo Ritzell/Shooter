@@ -307,7 +307,9 @@ function Enemy(canvas,size,PosX,PosY,Vx,Vy) {
         playSE(explosionAudio);
         enemies.forEach(function(enemy){
           if(enemy.isAlive() && enemy.hit(x,y,65)) {
-            enemy.damage(Math.round((er-5)*0.7));
+            setTimeout(function(){
+              enemy.damage(Math.round((er-5)*0.7));
+            },200);
           }
         });
         explode.reset();
