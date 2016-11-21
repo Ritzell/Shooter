@@ -152,7 +152,10 @@ function Enemy(canvas,size,PosX,PosY,Vx,Vy) {
             ctx.beginPath();
             ctx.fillStyle = 'hsl(' + 360 * bullet.life + ', 100%, 50%)';
             ctx.arc(x, y, br, 0, Math.PI * 2, false);
+            ctx.stroke();
+            ctx.strokeStyle ="rgba(250, 0, 0, 0.8)";
             ctx.fill();
+
         });
     };
 
@@ -449,7 +452,7 @@ window.onload = function() {
     var startTick = Date.now();
     var lastLoopTick;
     var remainingEnemies;
-    
+
     (function loop() {
         var tick = Date.now();
 
