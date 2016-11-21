@@ -308,7 +308,7 @@ function Enemy(canvas,size,PosX,PosY,Vx,Vy) {
         enemies.forEach(function(enemy){
           if(enemy.isAlive() && enemy.hit(x,y,65)) {
             setTimeout(function(){
-              enemy.damage(Math.round((er-5)*0.7));
+              enemy.damage(Math.round((er-5)*0.6));
             },200);
           }
         });
@@ -361,8 +361,8 @@ function mobUnit(State,canvas){
   }else if(State == stageState.move){
     movers = [];
     var waveStage = 5+Math.ceil(wave / 15);
-    for (var i = 0; i < 3; i++) {
-        enemies.push(new Enemy(canvas,5+Math.floor(wave/5),canvas.width/2,i+1,20 * (i % 2 == 1 ? -1 : 1),0));
+    for (var i = 0; i < 5 + Math.ceil((wave%11)/2); i++) {
+        enemies.push(new Enemy(canvas,5+Math.ceil((wave%10)/2),canvas.width/2,i+1,(20 + (wave % 10 * 10) ) * (i % 2 == 1 ? -1 : 1), 0));
         console.log(canvas.width/(waveStage+1)*(i+1));
     }
     movers = enemies;
@@ -448,8 +448,11 @@ window.onload = function() {
     var EnemyRegularlyTick = Date.now();
     var startTick = Date.now();
     var lastLoopTick;
+    var remainingEnemies;
+    
     (function loop() {
         var tick = Date.now();
+
         if(lastLoopTick == undefined){
           lastLoopTick = Date.now();
         }
@@ -506,7 +509,7 @@ window.onload = function() {
                 myX = canvas.width / 2;
                 myY =4 * canvas.height / 5 ;
                 msg = 'スペースキーを押してゲームをスタートしよう！';
-                wave = 11;
+                wave = 1;
                 playerHP = 2;
                 break;
             case Status.toStart:
@@ -605,7 +608,8 @@ window.onload = function() {
             }
             enemy.draw(ctx);
             if (status != Status.inGame) return;
-            if ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  enemy.bulletsHit(myX, myY, myR)) {
+            console.log(remainingEnemies);
+            if (remainingEnemies > 0 && ((enemy.isAlive() && enemy.hit(myX, myY, myR)) ||  enemy.bulletsHit(myX, myY, myR))) {
               playerHP -= 1;
               playSE(deadAudio);
               if(playerHP <= 0){
@@ -663,9 +667,9 @@ window.onload = function() {
         });
 
         if (drawStatus) {
-            var remainingEnemies = enemies.filter(function(enemy) {
-                return enemy.isAlive();
-            }).length;
+          remainingEnemies = enemies.filter(function(enemy) {
+              return enemy.isAlive();
+          }).length;
             if (status == Status.inGame && remainingEnemies <= 0) {
                 if(enemies.filter(function(enemy){
                   return enemy.explodeState();
